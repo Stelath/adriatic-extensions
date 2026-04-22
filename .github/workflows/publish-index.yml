@@ -1,0 +1,64 @@
+name: Publish index
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "extensions/**"
+      - "schema/**"
+      - ".github/workflows/publish-index.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  build-index:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Regenerate index.json
+        run: |
+          set -euo pipefail
+          {
+            echo '{'
+            echo '  "schemaVersion": 1,'
+            echo '  "generated": "'"$(date -u +%Y-%m-%dT%H:%M:%SZ)"'",'
+            echo '  "extensions": ['
+            first=1
+            for manifest in extensions/*/extension.json; do
+              [ $first -eq 0 ] && echo ','
+              first=0
+              jq -c '{
+                id: .id,
+                displayName: .displayName,
+                tagline: .tagline,
+                iconSymbol: .iconSymbol,
+                author: .author.name,
+                license: .license,
+                rvlVersion: .rvlVersion,
+                minHostVersion: .minHostVersion,
+                manifestPath: ("extensions/" + .id + "/extension.json"),
+                hasRelease: (.releases.macos != null)
+              }' "$manifest" | sed 's/^/    /'
+            done
+            echo
+            echo '  ]'
+            echo '}'
+          } > index.json.new
+          mv index.json.new index.json
+
+      - name: Commit if changed
+        run: |
+          if git diff --quiet -- index.json; then
+            echo "no changes"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.json
+          git commit -m "chore: regenerate index.json"
+          git push

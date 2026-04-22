@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "generated": "2026-04-21T00:00:00Z",
+  "extensions": [
+    {
+      "id": "com.anthropic.claude-code",
+      "displayName": "Claude Code",
+      "tagline": "Claude Code, from your phone.",
+      "iconSymbol": "bubble.left.and.text.bubble.right.fill",
+      "author": "Alex Korte",
+      "license": "MIT",
+      "rvlVersion": 1,
+      "minHostVersion": "1.0.0",
+      "manifestPath": "extensions/com.anthropic.claude-code/extension.json",
+      "hasRelease": false
+    }
+  ]
+}

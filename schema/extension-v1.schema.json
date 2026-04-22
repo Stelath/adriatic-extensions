@@ -1,0 +1,134 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/stelath/adriatic-extensions/main/schema/extension-v1.schema.json",
+  "title": "Adriatic Extension Manifest",
+  "description": "v1 manifest format. See SPEC.md for field meanings.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "displayName",
+    "iconSymbol",
+    "messagePrefix",
+    "author",
+    "license",
+    "minHostVersion",
+    "rvlVersion"
+  ],
+  "properties": {
+    "$schema": { "type": "string", "format": "uri" },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(\\.[a-z0-9-]+)+$",
+      "description": "Reverse-DNS unique identifier."
+    },
+    "displayName": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64
+    },
+    "tagline": {
+      "type": "string",
+      "maxLength": 120
+    },
+    "summary": {
+      "type": "string",
+      "maxLength": 1200
+    },
+    "iconSymbol": {
+      "type": "string",
+      "minLength": 1,
+      "description": "SF Symbol name. Verify with the SF Symbols app."
+    },
+    "messagePrefix": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*\\.$",
+      "description": "Lowercase reserved prefix, must end with a period."
+    },
+    "author": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "url": { "type": "string", "format": "uri" }
+      }
+    },
+    "repository": {
+      "type": "string",
+      "format": "uri"
+    },
+    "homepage": {
+      "type": "string",
+      "format": "uri"
+    },
+    "license": {
+      "type": "string",
+      "minLength": 1,
+      "description": "SPDX identifier (e.g. MIT, Apache-2.0, GPL-3.0)."
+    },
+    "minHostVersion": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+(?:[-+].*)?$"
+    },
+    "rvlVersion": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "capabilities": {
+      "type": "array",
+      "items": { "type": "string" },
+      "uniqueItems": true
+    },
+    "releases": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "macos": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["version", "url", "sha256"],
+          "properties": {
+            "version": {
+              "type": "string",
+              "pattern": "^\\d+\\.\\d+\\.\\d+(?:[-+].*)?$"
+            },
+            "url": {
+              "type": "string",
+              "format": "uri"
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[A-Fa-f0-9]{64}$"
+            },
+            "minOS": {
+              "type": "string",
+              "pattern": "^\\d+\\.\\d+(?:\\.\\d+)?$"
+            },
+            "notarized": { "type": "boolean" },
+            "teamId": {
+              "type": "string",
+              "pattern": "^[A-Z0-9]{10}$"
+            }
+          },
+          "if": {
+            "properties": { "notarized": { "const": true } },
+            "required": ["notarized"]
+          },
+          "then": {
+            "required": ["teamId"]
+          }
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "description": "Either point at source or ship a release.",
+      "anyOf": [
+        { "required": ["repository"] },
+        { "required": ["releases"] }
+      ]
+    }
+  ]
+}

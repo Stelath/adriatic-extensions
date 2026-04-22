@@ -1,0 +1,80 @@
+name: Validate
+
+on:
+  pull_request:
+    paths:
+      - "extensions/**"
+      - "schema/**"
+      - ".github/workflows/validate.yml"
+
+jobs:
+  schema:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install validator
+        run: npm install -g ajv-cli@5 ajv-formats@3
+
+      - name: Validate every extension.json
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          fail=0
+          for manifest in extensions/*/extension.json; do
+            echo "→ $manifest"
+            ajv validate \
+              -s schema/extension-v1.schema.json \
+              -d "$manifest" \
+              --spec=draft2020 \
+              -c ajv-formats \
+              || fail=1
+          done
+          exit $fail
+
+      - name: Folder name matches id
+        run: |
+          set -euo pipefail
+          fail=0
+          for manifest in extensions/*/extension.json; do
+            folder="$(basename "$(dirname "$manifest")")"
+            id="$(jq -r .id "$manifest")"
+            if [ "$folder" != "$id" ]; then
+              echo "✗ folder '$folder' does not match id '$id'"
+              fail=1
+            fi
+          done
+          exit $fail
+
+  release-binary:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify release URL + sha256 (when present)
+        run: |
+          set -euo pipefail
+          fail=0
+          for manifest in extensions/*/extension.json; do
+            url="$(jq -r '.releases.macos.url // empty' "$manifest")"
+            sha="$(jq -r '.releases.macos.sha256 // empty' "$manifest")"
+            [ -z "$url" ] && continue
+            echo "→ $manifest → $url"
+            tmp="$(mktemp)"
+            if ! curl -fSL --retry 2 --max-time 120 -o "$tmp" "$url"; then
+              echo "✗ download failed"
+              fail=1
+              continue
+            fi
+            actual="$(shasum -a 256 "$tmp" | awk '{print $1}')"
+            if [ "$actual" != "$sha" ]; then
+              echo "✗ sha256 mismatch (manifest: $sha, actual: $actual)"
+              fail=1
+            fi
+            rm -f "$tmp"
+          done
+          exit $fail

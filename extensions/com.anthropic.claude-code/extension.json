@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/stelath/adriatic-extensions/main/schema/extension-v1.schema.json",
+  "id": "com.anthropic.claude-code",
+  "displayName": "Claude Code",
+  "tagline": "Claude Code, from your phone.",
+  "summary": "Helm is a standalone macOS GUI for Claude Code that doubles as the reference Adriatic extension. Once Helm is running, opening the Extensions tab on your iPhone gives you a touch-optimized chat surface backed by your local Claude Code session — review tool calls, approve permission prompts, and keep a conversation going without unlocking your Mac.",
+  "iconSymbol": "bubble.left.and.text.bubble.right.fill",
+  "messagePrefix": "agent.",
+  "author": {
+    "name": "Alex Korte",
+    "url": "https://github.com/stelath"
+  },
+  "repository": "https://github.com/stelath/Meriggiare-Apps",
+  "homepage": "https://github.com/stelath/Meriggiare-Apps/tree/main/Helm",
+  "license": "MIT",
+  "minHostVersion": "1.0.0",
+  "rvlVersion": 1,
+  "capabilities": []
+}
